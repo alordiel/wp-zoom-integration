@@ -94,7 +94,7 @@ class Zoom_Video_Conferencing_Admin_PostType {
 			return;
 		}
 
-		$taxonomy  = 'zoom-meeting';
+		$taxonomy = 'zoom-meeting';
 		$taxonomy = get_taxonomy( $taxonomy );
 		$selected = $_REQUEST[ $taxonomy ] ?? '';
 		wp_dropdown_categories( array(
@@ -193,12 +193,12 @@ class Zoom_Video_Conferencing_Admin_PostType {
 						<a href="javascript:void(0);" class="vczapi-meeting-state-change" data-type="post_type"
 						   data-state="end" data-postid="<?php echo $post_id; ?>"
 						   data-id="<?php echo $meeting->id ?>"><?php _e( 'Disable Join', 'video-conferencing-with-zoom-api' ); ?></a>
-                        <p class="description"><?php _e( 'Restrict users to join this meeting before the start time or after the meeting is completed.', 'video-conferencing-with-zoom-api' ); ?></p>
+						<p class="description"><?php _e( 'Restrict users to join this meeting before the start time or after the meeting is completed.', 'video-conferencing-with-zoom-api' ); ?></p>
 					<?php } else { ?>
 						<a href="javascript:void(0);" class="vczapi-meeting-state-change" data-type="post_type"
 						   data-state="resume" data-postid="<?php echo $post_id; ?>"
 						   data-id="<?php echo $meeting->id ?>"><?php _e( 'Enable Join', 'video-conferencing-with-zoom-api' ); ?></a>
-                        <p class="description"><?php _e( 'Resuming this will enable users to join this meeting.', 'video-conferencing-with-zoom-api' ); ?></p>
+						<p class="description"><?php _e( 'Resuming this will enable users to join this meeting.', 'video-conferencing-with-zoom-api' ); ?></p>
 					<?php }
 				} else {
 					_e( 'Meeting not created yet.', 'video-conferencing-with-zoom-api' );
@@ -325,11 +325,6 @@ class Zoom_Video_Conferencing_Admin_PostType {
 		wp_enqueue_script( 'video-conferencing-with-zoom-api-select2-js' );
 		wp_enqueue_script( 'video-conferencing-with-zoom-api-timepicker-js' );
 
-		//Check if any transient by name is available
-		$users = video_conferencing_zoom_api_get_user_transients();
-
-		$meeting_fields = get_post_meta( $post->ID, '_meeting_fields', true );
-
 		do_action( 'vczapi_before_fields_admin', $post );
 
 		//Get Template
@@ -347,15 +342,15 @@ class Zoom_Video_Conferencing_Admin_PostType {
 		wp_nonce_field( '_zvc_meeting_save', '_zvc_nonce' );
 		$meeting_details = get_post_meta( $post->ID, '_meeting_zoom_details', true );
 		?>
-        <div class="zoom-metabox-wrapper">
+		<div class="zoom-metabox-wrapper">
 			<?php
 			if ( ! empty( $meeting_details ) ) {
 				if ( ! empty( $meeting_details->code ) && ! empty( $meeting_details->message ) ) {
 					?>
-                    <p>
+					<p>
 						<strong>Meeting has not been created for this post yet. Publish your meeting or hit update to
 							create a new one for this post !</strong>
-                    </p>
+					</p>
 					<?php
 					echo '<p style="color:red;font-size:18px;"><strong>Zoom Error:</strong> ' . $meeting_details->message . '</p>';
 				} else {
@@ -364,39 +359,39 @@ class Zoom_Video_Conferencing_Admin_PostType {
 
 					$join_url = ! empty( $meeting_details->encrypted_password ) ? vczapi_get_pwd_embedded_join_link( $meeting_details->join_url, $meeting_details->encrypted_password ) : $meeting_details->join_url;
 					?>
-                    <div class="zoom-metabox-content">
+					<div class="zoom-metabox-content">
 						<p><a target="_blank" href="<?php echo esc_url( $meeting_details->start_url ); ?>"
 							  title="Start URL">Start Meeting</a></p>
 						<p><a target="_blank" href="<?php echo esc_url( $join_url ); ?>" title="Start URL">Join
 								Meeting</a></p>
 						<p><a target="_blank" href="<?php echo esc_url( $zoom_host_url ); ?>" title="Start URL">Start
 								via Browser</a></p>
-                        <p><strong>Meeting ID:</strong> <?php echo $meeting_details->id; ?></p>
+						<p><strong>Meeting ID:</strong> <?php echo $meeting_details->id; ?></p>
 						<?php do_action( 'vczapi_meeting_details_admin', $meeting_details ); ?>
-                    </div>
-                    <hr>
+					</div>
+					<hr>
 					<?php
 				}
 			} else { ?>
-                <p>
-                    <strong><?php _e( 'Meeting has not been created for this post yet. Publish your meeting or hit update to create a new one for this post !', 'video-conferencing-with-zoom-api' ); ?></strong>
-                </p>
+				<p>
+					<strong><?php _e( 'Meeting has not been created for this post yet. Publish your meeting or hit update to create a new one for this post !', 'video-conferencing-with-zoom-api' ); ?></strong>
+				</p>
 			<?php } ?>
-            <div class="zoom-metabox-content">
-                <p><?php _e( 'Requires Login?', 'video-conferencing-with-zoom-api' ); ?>
+			<div class="zoom-metabox-content">
+				<p><?php _e( 'Requires Login?', 'video-conferencing-with-zoom-api' ); ?>
 					<input type="checkbox" name="option_logged_in"
 						   value="1" <?php ! empty( $meeting_fields['site_option_logged_in'] ) ? checked( '1', $meeting_fields['site_option_logged_in'] ) : false; ?>
 						   class="regular-text">
-                </p>
-                <p class="description"><?php _e( 'Only logged in users of this site will be able to join this meeting.', 'video-conferencing-with-zoom-api' ); ?></p>
-                <p><?php _e( 'Hide Join via browser link ?', 'video-conferencing-with-zoom-api' ); ?>
+				</p>
+				<p class="description"><?php _e( 'Only logged in users of this site will be able to join this meeting.', 'video-conferencing-with-zoom-api' ); ?></p>
+				<p><?php _e( 'Hide Join via browser link ?', 'video-conferencing-with-zoom-api' ); ?>
 					<input type="checkbox" name="option_browser_join"
 						   value="1" <?php ! empty( $meeting_fields['site_option_browser_join'] ) ? checked( '1', $meeting_fields['site_option_browser_join'] ) : false; ?>
 						   class="regular-text">
-                </p>
-                <p class="description"><?php _e( 'This will disable join via browser link in frontend page.', 'video-conferencing-with-zoom-api' ); ?></p>
-            </div>
-        </div>
+				</p>
+				<p class="description"><?php _e( 'This will disable join via browser link in frontend page.', 'video-conferencing-with-zoom-api' ); ?></p>
+			</div>
+		</div>
 		<?php
 	}
 
@@ -409,29 +404,29 @@ class Zoom_Video_Conferencing_Admin_PostType {
 		$meeting_fields  = get_post_meta( $post->ID, '_meeting_fields', true );
 		$meeting_details = get_post_meta( $post->ID, '_meeting_zoom_details', true );
 		?>
-        <div class="zoom-metabox-wrapper">
-            <div class="zoom-metabox-content">
-                <p><?php _e( 'Enable Debug?', 'video-conferencing-with-zoom-api' ); ?>
+		<div class="zoom-metabox-wrapper">
+			<div class="zoom-metabox-content">
+				<p><?php _e( 'Enable Debug?', 'video-conferencing-with-zoom-api' ); ?>
 					<input type="checkbox" name="option_enable_debug_logs"
 						   value="1" <?php ! empty( $meeting_fields['site_option_enable_debug_log'] ) ? checked( '1', $meeting_fields['site_option_enable_debug_log'] ) : false; ?>
 						   class="regular-text">
-                </p>
-            </div>
-        </div>
-        <style>
-            pre {
-                position: relative;
-                width: 100%;
-                padding: 0;
-                margin: 0;
-                overflow: auto;
-                overflow-y: hidden;
-                font-size: 12px;
-                line-height: 20px;
-                background: #efefef;
-                border: 1px solid #777;
-            }
-        </style>
+				</p>
+			</div>
+		</div>
+		<style>
+			pre {
+				position: relative;
+				width: 100%;
+				padding: 0;
+				margin: 0;
+				overflow: auto;
+				overflow-y: hidden;
+				font-size: 12px;
+				line-height: 20px;
+				background: #efefef;
+				border: 1px solid #777;
+			}
+		</style>
 		<?php
 		if ( ! empty( $meeting_fields['site_option_enable_debug_log'] ) ) {
 			if ( ! empty( $meeting_details->id ) ) {
@@ -502,13 +497,10 @@ class Zoom_Video_Conferencing_Admin_PostType {
 		do_action( 'vczapi_admin_before_zoom_meeting_is_created', $create_meeting_arr );
 
 		//Update Post Meta Values
-		update_post_meta( $post_id, '_meeting_fields', $create_meeting_arr );
-		update_post_meta( $post_id, '_meeting_field_start_date', $create_meeting_arr['start_date'] );
 		$meeting_type = ! empty( $create_meeting_arr['meeting_type'] ) && $create_meeting_arr['meeting_type'] === 2 ? 'webinar' : 'meeting';
 		update_post_meta( $post_id, '_vczapi_meeting_type', $meeting_type );
-
-
-			update_post_meta( $post_id, '_meeting_field_start_date_utc', $create_meeting_arr['start_date'] );
+		update_post_meta( $post_id, '_meeting_fields', $create_meeting_arr );
+		update_post_meta( $post_id, '_meeting_field_start_date_utc', $create_meeting_arr['start_date'] );
 
 
 		//Create Zoom Meeting Now
@@ -539,28 +531,28 @@ class Zoom_Video_Conferencing_Admin_PostType {
 	private function create_zoom_meeting( $post, $create_meeting_arr ): void {
 		//Prepare Webinar Insert Data
 		if ( ! empty( $create_meeting_arr['meeting_type'] ) && $create_meeting_arr['meeting_type'] === 2 ) {
-			$webinar_array    = Zoom_Video_Conferencing_Admin_Webinars::prepare_webinar( $create_meeting_arr, $post );
+			$webinar_array   = Zoom_Video_Conferencing_Admin_Webinars::prepare_webinar( $create_meeting_arr, $post );
 			$webinar_created = json_decode( zoom_conference()->createAWebinar( $create_meeting_arr['userId'], $webinar_array ) );
-			$this->updateZoomDetails($webinar_created, $post->ID, $create_meeting_arr);
+			$this->updateZoomDetails( $webinar_created, $post->ID, $create_meeting_arr );
 		} else {
 			$mtg_param       = Zoom_Video_Conferencing_Admin_Meetings::prepare_create( $create_meeting_arr, $post );
 			$meeting_created = json_decode( zoom_conference()->createAMeeting( $mtg_param ) );
-			$this->updateZoomDetails($meeting_created, $post->ID, $create_meeting_arr);
+			$this->updateZoomDetails( $meeting_created, $post->ID, $create_meeting_arr );
 		}
 
 	}
 
-	private function updateZoomDetails($meeting, $post_id, $meeting_arguments): void {
+	private function updateZoomDetails( $meeting, $post_id, $meeting_arguments ): void {
 		if ( empty( $meeting->code ) ) {
-				update_post_meta( $post_id, '_meeting_zoom_details', $meeting );
-				update_post_meta( $post_id, '_meeting_zoom_join_url', $meeting->join_url );
-				update_post_meta( $post_id, '_meeting_zoom_start_url', $meeting->start_url );
-				update_post_meta( $post_id, '_meeting_zoom_meeting_id', $meeting->id );
-			} else {
-				//Store Error Message
-				update_post_meta( $post_id, '_meeting_zoom_details', $meeting );
-				update_post_meta( $post_id, '_meeting_zoom_used_arguments', $meeting_arguments );
-			}
+			update_post_meta( $post_id, '_meeting_zoom_details', $meeting );
+			update_post_meta( $post_id, '_meeting_zoom_join_url', $meeting->join_url );
+			update_post_meta( $post_id, '_meeting_zoom_start_url', $meeting->start_url );
+			update_post_meta( $post_id, '_meeting_zoom_meeting_id', $meeting->id );
+		} else {
+			//Store Error Message
+			update_post_meta( $post_id, '_meeting_zoom_details', $meeting );
+			update_post_meta( $post_id, '_meeting_zoom_used_arguments', $meeting_arguments );
+		}
 	}
 
 	/**
@@ -577,7 +569,7 @@ class Zoom_Video_Conferencing_Admin_PostType {
 	private function update_zoom_meeting( $post, $updated_meeting_arr, $meeting_id ) {
 		if ( ! empty( $updated_meeting_arr['meeting_type'] ) && $updated_meeting_arr['meeting_type'] === 2 ) {
 			//Prepare Webinar update data
-			$webinar_array    = Zoom_Video_Conferencing_Admin_Webinars::prepare_webinar( $updated_meeting_arr, $post );
+			$webinar_array   = Zoom_Video_Conferencing_Admin_Webinars::prepare_webinar( $updated_meeting_arr, $post );
 			$webinar_updated = json_decode( zoom_conference()->updateWebinar( $meeting_id, $webinar_array ) );
 			if ( empty( $webinar_updated->code ) ) {
 				$webinar_info = json_decode( zoom_conference()->getWebinarInfo( $meeting_id ) );
