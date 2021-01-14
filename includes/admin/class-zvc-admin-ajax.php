@@ -35,7 +35,7 @@ class Zoom_Video_Conferencing_Admin_Ajax {
 	 * @since    2.0.0
 	 * @modified 2.1.0
 	 */
-	public function delete_meeting() {
+	public function delete_meeting(): void {
 		check_ajax_referer( '_nonce_zvc_security', 'security' );
 
 		$meeting_id   = absint( filter_input( INPUT_POST, 'meeting_id' ) );
@@ -64,7 +64,7 @@ class Zoom_Video_Conferencing_Admin_Ajax {
 	 * @since    1.0.0
 	 * @modified 2.1.0
 	 */
-	public function delete_bulk_meeting() {
+	public function delete_bulk_meeting(): void {
 		check_ajax_referer( '_nonce_zvc_security', 'security' );
 
 		$deleted      = false;
@@ -97,7 +97,7 @@ class Zoom_Video_Conferencing_Admin_Ajax {
 	/**
 	 * Dismiss admin notice
 	 */
-	public function dismiss_notice() {
+	public function dismiss_notice(): void {
 		update_option( 'zoom_api_notice', 1 );
 		wp_send_json( 1 );
 		wp_die();
@@ -109,26 +109,50 @@ class Zoom_Video_Conferencing_Admin_Ajax {
 	 * @since 3.0.0
 	 * @author Deepen Bajracharya
 	 */
-	public function check_connection() {
+	public function check_connection(): void {
 
 		check_ajax_referer( '_nonce_zvc_security', 'security' );
 
-		$test = json_decode( zoom_conference()->listUsers() );
+		$api_key    = sanitize_text_field( $_POST['apiKey'] );
+		$api_secret = sanitize_text_field( $_POST['apiSecret'] );
+
+		if ( empty( $api_key ) || empty( $api_secret ) ) {
+			echo json_encode( [ 'status' => 0, 'message' => __( 'Missing API key or secret' ) ], JSON_NUMERIC_CHECK );
+			wp_die();
+		}
+
+		$user_id    = get_current_user_id();
+		update_user_meta( $user_id, 'zoom_api_key', $api_key );
+		update_user_meta( $user_id, 'zoom_api_secret', $api_secret );
+
+		$zoom_api = zoom_conference();
+
+		$zoom_api->set_new_keys( $api_key, $api_secret );
+		$test = json_decode( $zoom_api->listUsers() );
+
 		if ( ! empty( $test ) ) {
 			if ( ! empty( $test->code ) ) {
-				wp_send_json( $test->message );
+				echo json_encode( [ 'status' => 0, 'message' => $test->message ], JSON_NUMERIC_CHECK );
+				wp_die();
 			}
 
 			if ( http_response_code() === 200 ) {
 				//After user has been created delete this transient in order to fetch latest Data.
 				video_conferencing_zoom_api_delete_user_cache();
-
-				wp_send_json( "API Connection is good. Please refresh !" );
+				$this->create_checksum( $user_id, $api_secret, $api_key );
+				echo json_encode( [ 'status' => 1, 'message' => __( "API Connection is good." ) ], JSON_NUMERIC_CHECK );
+				wp_die();
 			} else {
-				wp_send_json( $test );
+				echo json_encode( [ 'status' => 0, 'message' => $test ], JSON_NUMERIC_CHECK );
 			}
 		}
+		$this->delete_user_checksum( $user_id );
 		wp_die();
+	}
+
+	private function create_checksum( int $user_id, string $api_secret, string $api_key ): void {
+		$checksum = sha1( $api_secret . $api_key );
+		update_user_meta( $user_id, 'zoom_api_checksum', $checksum );
 	}
 
 	/**
@@ -137,7 +161,7 @@ class Zoom_Video_Conferencing_Admin_Ajax {
 	 * @since 3.2.0
 	 * @author Deepen Bajracharya
 	 */
-	public function get_auth() {
+	public function get_auth(): void {
 		check_ajax_referer( '_nonce_zvc_security', 'noncce' );
 
 		$zoom_api_key    = get_option( 'zoom_api_key' );
@@ -158,7 +182,7 @@ class Zoom_Video_Conferencing_Admin_Ajax {
 	 * Generate Signature
 	 *
 	 * @param $api_key
-	 * @param $api_sercet
+	 * @param $api_secret
 	 * @param $meeting_number
 	 * @param $role
 	 *
@@ -167,10 +191,10 @@ class Zoom_Video_Conferencing_Admin_Ajax {
 	 *
 	 * @author ZoomUS
 	 */
-	private function generate_signature( $api_key, $api_sercet, $meeting_number, $role ) {
+	private function generate_signature( $api_key, $api_secret, $meeting_number, $role ): string {
 		$time = time() * 1000; //time in milliseconds (or close enough)
 		$data = base64_encode( $api_key . $meeting_number . $time . $role );
-		$hash = hash_hmac( 'sha256', $data, $api_sercet, true );
+		$hash = hash_hmac( 'sha256', $data, $api_secret, true );
 		$_sig = $api_key . "." . $meeting_number . "." . $time . "." . $role . "." . base64_encode( $hash );
 
 		//return signature, url safe base64 encoded
@@ -180,7 +204,7 @@ class Zoom_Video_Conferencing_Admin_Ajax {
 	/**
 	 * Change State of the Meeting from here !
 	 */
-	public function state_change() {
+	public function state_change(): void {
 		check_ajax_referer( '_nonce_zvc_security', 'accss' );
 
 		$type       = sanitize_text_field( filter_input( INPUT_POST, 'type' ) );
@@ -248,14 +272,14 @@ class Zoom_Video_Conferencing_Admin_Ajax {
 	/**
 	 * Assign Host ID page
 	 */
-	public function assign_host_id() {
+	public function assign_host_id(): void {
 		$users      = vczapi_getWpUsers_basedon_UserRoles();
 		$result     = array();
 		$zoom_users = video_conferencing_zoom_api_get_user_transients();
 		if ( ! empty( $users ) ) {
 			foreach ( $users as $user ) {
 				$user_zoom_hostid = get_user_meta( $user->ID, 'user_zoom_hostid', true );
-				$host_id_field = '';
+				$host_id_field    = '';
 				if ( ! empty( $zoom_users ) ) {
 					$host_id_field .= '<select name="zoom_host_id[' . $user->ID . ']" style="width:100%">';
 					$host_id_field .= '<option value="">' . __( 'Not a Host', 'video-conferencing-with-zoom-api' ) . '</option>';
@@ -281,7 +305,7 @@ class Zoom_Video_Conferencing_Admin_Ajax {
 		}
 	}
 
-	public function get_wp_usersByRole() {
+	public function get_wp_usersByRole(): void {
 		$search_string = filter_input( INPUT_GET, 'term' );
 		$users         = vczapi_getWpUsers_basedon_UserRoles( $search_string );
 		$results       = array();
@@ -297,6 +321,10 @@ class Zoom_Video_Conferencing_Admin_Ajax {
 		wp_send_json( array( 'results' => $results ) );
 
 		wp_die();
+	}
+
+	private function delete_user_checksum( int $user_id ): void {
+		delete_user_meta( $user_id, 'zoom_api_checksum' );
 	}
 }
 
