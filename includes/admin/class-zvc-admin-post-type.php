@@ -400,7 +400,7 @@ class Zoom_Video_Conferencing_Admin_PostType {
 	 *
 	 * @param $post
 	 */
-	public function debug_metabox( $post ) {
+	public function debug_metabox( $post ): void {
 		$meeting_fields  = get_post_meta( $post->ID, '_meeting_fields', true );
 		$meeting_details = get_post_meta( $post->ID, '_meeting_zoom_details', true );
 		?>
@@ -445,9 +445,9 @@ class Zoom_Video_Conferencing_Admin_PostType {
 	 * Handles saving the meta box.
 	 *
 	 * @param int $post_id Post ID.
-	 * @param \WP_Post $post Post object.
+	 * @param WP_Post $post Post object.
 	 */
-	public function save_metabox( $post_id, $post ) {
+	public function save_metabox( $post_id, $post ): void {
 
 		// Check if not an autosave.
 		if ( wp_is_post_autosave( $post_id ) ) {
@@ -461,14 +461,17 @@ class Zoom_Video_Conferencing_Admin_PostType {
 
 		$this->api_key    = $_POST['zoom_api_key'];
 		$this->api_secret = $_POST['zoom_api_secret'];
-
+		$start_time = sanitize_text_field( $_POST['start_date'] );
+		dbga($start_time);
+		$start_time = preg_replace('/\s/', 'T', $start_time) . 'Z'; // Z- for timezone according to https://marketplace.zoom.us/docs/api-reference/zoom-api/meetings/meetingcreate
+		dbga($start_time);
 		$pwd                = sanitize_text_field( $_POST['password'] );
 		$pwd                = ! empty( $pwd ) ? $pwd : $post_id;
 		$create_meeting_arr = array(
 			'userId'                 => sanitize_text_field( $_POST['userId'] ),
 			'meeting_type'           => absint( sanitize_text_field( $_POST['meeting_type'] ) ),
-			'start_date'             => sanitize_text_field( $_POST['start_date'] ), // should be UTC
-			'timezone'               => sanitize_text_field( $_POST['timezone'] ),
+			'start_date'             => $start_time, // should be UTC
+			'timezone'               => '', // leaving it blank to match the UTC timezone
 			'duration'               => sanitize_text_field( $_POST['duration'] ),
 			'password'               => $pwd,
 			'meeting_authentication' => $_POST['meeting_authentication'] ?? null,
