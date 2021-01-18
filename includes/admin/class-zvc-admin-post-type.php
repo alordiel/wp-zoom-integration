@@ -461,10 +461,9 @@ class Zoom_Video_Conferencing_Admin_PostType {
 
 		$this->api_key    = $_POST['zoom_api_key'];
 		$this->api_secret = $_POST['zoom_api_secret'];
-		$start_time = sanitize_text_field( $_POST['start_date'] );
-		dbga($start_time);
-		$start_time = preg_replace('/\s/', 'T', $start_time) . 'Z'; // Z- for timezone according to https://marketplace.zoom.us/docs/api-reference/zoom-api/meetings/meetingcreate
-		dbga($start_time);
+		$start_time_original = sanitize_text_field( $_POST['start_date'] );
+		$start_time = preg_replace('/\s/', 'T', $start_time_original) . 'Z'; // Z- for timezone according to https://marketplace.zoom.us/docs/api-reference/zoom-api/meetings/meetingcreate
+
 		$pwd                = sanitize_text_field( $_POST['password'] );
 		$pwd                = ! empty( $pwd ) ? $pwd : $post_id;
 		$create_meeting_arr = array(
@@ -503,7 +502,7 @@ class Zoom_Video_Conferencing_Admin_PostType {
 		$meeting_type = ! empty( $create_meeting_arr['meeting_type'] ) && $create_meeting_arr['meeting_type'] === 2 ? 'webinar' : 'meeting';
 		update_post_meta( $post_id, '_vczapi_meeting_type', $meeting_type );
 		update_post_meta( $post_id, '_meeting_fields', $create_meeting_arr );
-		update_post_meta( $post_id, '_meeting_field_start_date_utc', $create_meeting_arr['start_date'] );
+		update_post_meta( $post_id, '_meeting_field_start_date_utc', $start_time_original );
 
 
 		//Create Zoom Meeting Now
