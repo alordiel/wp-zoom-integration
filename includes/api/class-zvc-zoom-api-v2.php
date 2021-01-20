@@ -85,7 +85,7 @@ if ( ! class_exists( 'Zoom_Video_Conferencing_Api' ) ) {
 		 *
 		 * @return array|bool|string|WP_Error
 		 */
-		public function sendRequest( $calledFunction, $data, $request = "GET") {
+		public function sendRequest( $calledFunction, $data, $request = "GET" ) {
 
 			$request_url = $this->api_url . $calledFunction;
 			$args        = array(
@@ -116,17 +116,20 @@ if ( ! class_exists( 'Zoom_Video_Conferencing_Api' ) ) {
 				$response       = wp_remote_post( $request_url, $args );
 			}
 
-			$response =  wp_remote_retrieve_body( $response );
-
-			if ( !empty($response['response']) && !empty($response['response']['code']) && $response['response']['code'] === 203 ) {
-				return true;
-			}
-
-			if ( ! $response ) {
+			if ( is_wp_error( $response ) ) {
 				return false;
 			}
 
-			return $response;
+			if ( ! isset( $response['body'] ) ) {
+				return false;
+			}
+
+			$response_body = $response['body'];
+			if ( ! empty( $response_body['response'] ) && ! empty( $response_body['response']['code'] ) && ( $response_body['response']['code'] === 203 || $response_body['response']['code'] === 204 ) ) {
+				return true;
+			}
+
+			return $response_body;
 		}
 
 		//function to generate JWT
@@ -280,49 +283,37 @@ if ( ! class_exists( 'Zoom_Video_Conferencing_Api' ) ) {
 		 *
 		 * @return array|bool|string|void|WP_Error
 		 */
-		public function updateMeetingInfo( $data = array() ) {
-			$post_time  = $data['start_date'];
-			$start_time = gmdate( "Y-m-d\TH:i:s", strtotime( $post_time ) );
+		public function updateMeetingInfo( $data = [] ) {
 
-			$updateMeetingInfoArray = array();
+			$start_time = $data['start_date'] . 'Z';
 
-			if ( ! empty( $data['alternative_host_ids'] ) ) {
-				if ( count( $data['alternative_host_ids'] ) > 1 ) {
-					$alternative_host_ids = implode( ",", $data['alternative_host_ids'] );
-				} else {
-					$alternative_host_ids = $data['alternative_host_ids'][0];
-				}
-			}
+			$updated = [];
 
-			$updateMeetingInfoArray['topic']      = $data['topic'];
-			$updateMeetingInfoArray['agenda']     = ! empty( $data['agenda'] ) ? $data['agenda'] : "";
-			$updateMeetingInfoArray['type']       = ! empty( $data['type'] ) ? $data['type'] : 2; //Scheduled
-			$updateMeetingInfoArray['start_time'] = $start_time;
-			$updateMeetingInfoArray['timezone']   = $data['timezone'];
-			$updateMeetingInfoArray['password']   = ! empty( $data['password'] ) ? $data['password'] : "";
-			$updateMeetingInfoArray['duration']   = ! empty( $data['duration'] ) ? $data['duration'] : 60;
-			$updateMeetingInfoArray['settings']   = array(
-				'meeting_authentication' => ! empty( $data['meeting_authentication'] ) ? true : false,
-				'join_before_host'       => ! empty( $data['join_before_host'] ) ? true : false,
-				'host_video'             => ! empty( $data['option_host_video'] ) ? true : false,
-				'participant_video'      => ! empty( $data['option_participants_video'] ) ? true : false,
-				'mute_upon_entry'        => ! empty( $data['option_mute_participants'] ) ? true : false,
-				'auto_recording'         => ! empty( $data['option_auto_recording'] ) ? $data['option_auto_recording'] : "none",
-				'alternative_hosts'      => isset( $alternative_host_ids ) ? $alternative_host_ids : ""
+			$updated['topic']      = $data['topic'];
+			$updated['agenda']     = "";
+			$updated['type']       = 2; //Scheduled
+			$updated['start_time'] = $start_time;
+			$updated['timezone']   = 'UTC';
+			$updated['password']   = ! empty( $data['password'] ) ? $data['password'] : "";
+			$updated['duration']   = 45;
+			$updated['settings']   = array(
+				'meeting_authentication' => true,
+				'join_before_host'       => true,
+				'host_video'             => ! empty( $data['option_host_video'] ),
+				'participant_video'      => ! empty( $data['option_participants_video'] ),
+				'mute_upon_entry'        => false,
+				'auto_recording'         => "none",
+				'alternative_hosts'      => "",
 			);
 
-			$updateMeetingInfoArray = apply_filters( 'vczapi_updateMeetingInfo', $updateMeetingInfoArray );
-			if ( ! empty( $updateMeetingInfoArray ) ) {
-				return $this->sendRequest( 'meetings/' . $data['meeting_id'], $updateMeetingInfoArray, "PATCH" );
-			}
+			return $this->sendRequest( 'meetings/' . $data['meeting_id'], $updated, "PATCH" );
 
-			return null;
 		}
 
 		/**
 		 * Get a Meeting Info
 		 *
-		 * @param  int $id
+		 * @param int $id
 		 *
 		 * @return array
 		 */
