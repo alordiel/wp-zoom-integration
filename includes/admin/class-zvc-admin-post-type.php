@@ -447,7 +447,7 @@ class Zoom_Video_Conferencing_Admin_PostType {
 	 * @param int $post_id Post ID.
 	 * @param WP_Post $post Post object.
 	 */
-	public function save_metabox( $post_id, $post ): void {
+	public function save_metabox( int $post_id, $post ): void {
 
 		// Check if not an autosave.
 		if ( wp_is_post_autosave( $post_id ) ) {
@@ -470,7 +470,7 @@ class Zoom_Video_Conferencing_Admin_PostType {
 			'userId'                 => sanitize_text_field( $_POST['userId'] ),
 			'meeting_type'           => absint( sanitize_text_field( $_POST['meeting_type'] ) ),
 			'start_date'             => $start_time, // should be UTC
-			'timezone'               => '', // leaving it blank to match the UTC timezone
+			'timezone'               => 'UTC',
 			'duration'               => sanitize_text_field( $_POST['duration'] ),
 			'password'               => $pwd,
 			'meeting_authentication' => $_POST['meeting_authentication'] ?? null,
