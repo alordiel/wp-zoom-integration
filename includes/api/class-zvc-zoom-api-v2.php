@@ -124,6 +124,10 @@ if ( ! class_exists( 'Zoom_Video_Conferencing_Api' ) ) {
 				return false;
 			}
 
+			if ( ! empty( $response['response'] ) && ! empty( $response['response']['code'] ) && ( $response['response']['code'] === 203 || $response['response']['code'] === 204 ) ) {
+				return true;
+			}
+
 			$response_body = $response['body'];
 			if ( ! empty( $response_body['response'] ) && ! empty( $response_body['response']['code'] ) && ( $response_body['response']['code'] === 203 || $response_body['response']['code'] === 204 ) ) {
 				return true;
