@@ -459,10 +459,15 @@ class Zoom_Video_Conferencing_Admin_PostType {
 			return;
 		}
 
-		$this->api_key    = $_POST['zoom_api_key'];
-		$this->api_secret = $_POST['zoom_api_secret'];
+		// any case when the update of the post type is a for changing status or something like this
+		if ( empty( $_POST['zoom_api_key'] ) || empty( $_POST['zoom_api_secret'] ) ) {
+			return;
+		}
+
+		$this->api_key       = $_POST['zoom_api_key'];
+		$this->api_secret    = $_POST['zoom_api_secret'];
 		$start_time_original = sanitize_text_field( $_POST['start_date'] );
-		$start_time = preg_replace('/\s/', 'T', $start_time_original) . 'Z'; // Z- for timezone according to https://marketplace.zoom.us/docs/api-reference/zoom-api/meetings/meetingcreate
+		$start_time          = preg_replace( '/\s/', 'T', $start_time_original ) . 'Z'; // Z- for timezone according to https://marketplace.zoom.us/docs/api-reference/zoom-api/meetings/meetingcreate
 
 		$pwd                = sanitize_text_field( $_POST['password'] );
 		$pwd                = ! empty( $pwd ) ? $pwd : $post_id;
@@ -471,7 +476,7 @@ class Zoom_Video_Conferencing_Admin_PostType {
 			'meeting_type'           => absint( sanitize_text_field( $_POST['meeting_type'] ) ),
 			'start_date'             => $start_time, // should be UTC
 			'timezone'               => 'UTC',
-			'duration'               => sanitize_text_field( $_POST['duration'] ),
+			'duration'               => 45,
 			'password'               => $pwd,
 			'meeting_authentication' => $_POST['meeting_authentication'] ?? null,
 			'option_host_video'      => $_POST['option_host_video'] ?? null,

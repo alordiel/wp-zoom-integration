@@ -85,7 +85,7 @@ if ( ! class_exists( 'Zoom_Video_Conferencing_Api' ) ) {
 		 *
 		 * @return array|bool|string|WP_Error
 		 */
-		public function sendRequest( $calledFunction, $data, $request = "GET" ) {
+		public function     sendRequest( $calledFunction, $data, $request = "GET" ) {
 
 			$request_url = $this->api_url . $calledFunction;
 			$args        = array(
